@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Connection {
+  id                                 Int      @id @default(autoincrement())
+  workflowId                         String
+  sourceNodeId                       String
+  targetNodeId                       String
+  sourceHandle                       String?
+  targetHandle                       String?
+  Node_Connection_sourceNodeIdToNode Node     @relation("Connection_sourceNodeIdToNode", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+  Node_Connection_targetNodeIdToNode Node     @relation("Connection_targetNodeIdToNode", fields: [targetNodeId], references: [id], onDelete: Cascade)
+  Workflow                           Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
+
+model Credential {
+  id         Int    @id @default(autoincrement())
+  userId     Int
+  name       String @unique
+  credential Json
+  User       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ExecutionLog {
+  id         Int       @id @default(autoincrement())
+  workflowId String
+  startedAt  DateTime
+  endTime    DateTime?
+  status     String
+  resultData Json?
+  error      Json?
+  Workflow   Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
+
+model Node {
+  id                                       String       @id
+  workflowId                               String
+  type                                     NodeType
+  index                                    Int
+  config                                   Json?
+  error                                    String?
+  label                                    String?
+  position                                 Json?
+  result                                   Json?
+  status                                   String?      @default("idle")
+  Connection_Connection_sourceNodeIdToNode Connection[] @relation("Connection_sourceNodeIdToNode")
+  Connection_Connection_targetNodeIdToNode Connection[] @relation("Connection_targetNodeIdToNode")
+  Workflow                                 Workflow     @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
+}
+
+model User {
+  id         Int          @id @default(autoincrement())
+  name       String
+  email      String       @unique
+  password   String
+  isActive   Boolean
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime?
+  Credential Credential[]
+  Workflow   Workflow[]
+}
+
+model Workflow {
+  id           String         @id
+  name         String?
+  description  String?
+  userId       Int
+  state        WorkflowState
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime?
+  Connection   Connection[]
+  ExecutionLog ExecutionLog[]
+  Node         Node[]
+  User         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum NodeType {
+  ACTION
+  MANUAL_API
+  SET
+  FILTER
+  DELAY
+  CHAT
+  TRANSFORM
+  EXTRACT
+  CONDITION
+  LOOP
+  SWITCH
+  FAIL
+  WEBHOOK
+  PARALLEL
+  MERGE
+  TRIGGER
+}
+
+enum WorkflowState {
+  Scheduled
+  Draft
+  Inactive
+  Running
+  Completed
+}

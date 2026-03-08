@@ -6,6 +6,9 @@
 
 
 
-.env*
+.env
 
 
+.vscode
+/src/generated/prisma
+/dist
