@@ -1,5 +1,4 @@
-import type { WorkflowState } from "@prisma/client";
-import { NodeType } from "../../generated/prisma/client.js";
+import { NodeType, type WorkflowState } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import { getNodeLabel } from "../../services/label.service.js";
 import { executeActionNode } from "./executors/action.executor.js";
